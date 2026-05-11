@@ -1,0 +1,38 @@
+name: Construir APK Debug
+
+# Se ejecutará cada vez que subas un cambio a la rama "main"
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Compilar APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Descarga el código fuente del repositorio
+      - name: ⬇️ Checkout del código
+        uses: actions/checkout@v4
+
+      # 2. Configura el JDK adecuado (Java 17 para AGP 8.x)
+      - name: ☕ Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. Otorga permisos de ejecución al wrapper de Gradle
+      - name: 🔧 Hacer ejecutable gradlew
+        run: chmod +x ./gradlew
+
+      # 4. Construye el APK de depuración
+      - name: 🛠️ Compilar APK Debug
+        run: ./gradlew assembleDebug
+
+      # 5. Publica el APK generado como un artefacto descargable
+      - name: 📤 Subir APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk

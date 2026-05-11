@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Directorio de caché interno -->
+    <cache-path
+        name="cache"
+        path="." />
+    <!-- Directorio de archivos internos -->
+    <files-path
+        name="files"
+        path="." />
+    <!-- Almacenamiento externo (para export de perfiles) -->
+    <external-files-path
+        name="external_files"
+        path="." />
+</paths>
