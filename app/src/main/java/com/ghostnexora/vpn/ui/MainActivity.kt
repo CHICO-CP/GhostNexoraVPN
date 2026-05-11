@@ -13,6 +13,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ghostnexora.vpn.navigation.GhostNavigationDrawer
 import com.ghostnexora.vpn.navigation.GhostNavHost
@@ -21,27 +23,13 @@ import com.ghostnexora.vpn.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
-/**
- * Actividad principal y única de Ghost Nexora VPN.
- *
- * Gestiona:
- * - Splash Screen
- * - Edge-to-edge rendering
- * - Navigation Drawer + NavController
- * - Top App Bar contextual
- */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Splash Screen antes del setContent
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
-
-        // Dibuja detrás de las barras del sistema
         enableEdgeToEdge()
-
         setContent {
             GhostNexoraTheme {
                 GhostNexoraApp()
@@ -57,23 +45,23 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GhostNexoraApp() {
-    val navController = rememberNavController()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
+    val navController     = rememberNavController()
+    val drawerState       = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val coroutineScope    = rememberCoroutineScope()
 
-    // Ruta actual para el título del TopBar
-    val currentBackStack by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStack?.destination?.route
-    val currentTitle = screenTitle(currentRoute)
+    // Import explícito resuelve el Unresolved reference
+    val currentBackStack  by navController.currentBackStackEntryAsState()
+    val currentRoute      = currentBackStack?.destination?.route
+    val currentTitle      = screenTitle(currentRoute)
 
     GhostNavigationDrawer(
         navController = navController,
-        drawerState = drawerState
+        drawerState   = drawerState
     ) {
         Scaffold(
             topBar = {
                 GhostTopBar(
-                    title = currentTitle,
+                    title       = currentTitle,
                     onMenuClick = {
                         coroutineScope.launch {
                             if (drawerState.isClosed) drawerState.open()
@@ -83,7 +71,7 @@ private fun GhostNexoraApp() {
                 )
             },
             containerColor = BackgroundDark,
-            contentColor = TextPrimary
+            contentColor   = TextPrimary
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -110,7 +98,7 @@ private fun GhostTopBar(
     TopAppBar(
         title = {
             Text(
-                text = title,
+                text  = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = TextPrimary
             )
@@ -118,20 +106,19 @@ private fun GhostTopBar(
         navigationIcon = {
             IconButton(onClick = onMenuClick) {
                 Icon(
-                    imageVector = Icons.Filled.Menu,
+                    imageVector        = Icons.Filled.Menu,
                     contentDescription = "Menú",
-                    tint = NeonCyan
+                    tint               = NeonCyan
                 )
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = SurfaceDark,
-            scrolledContainerColor = SurfaceDark,
-            navigationIconContentColor = NeonCyan,
-            titleContentColor = TextPrimary,
-            actionIconContentColor = NeonCyan
+            containerColor              = SurfaceDark,
+            scrolledContainerColor      = SurfaceDark,
+            navigationIconContentColor  = NeonCyan,
+            titleContentColor           = TextPrimary,
+            actionIconContentColor      = NeonCyan
         ),
-        // Línea inferior sutil para separar del contenido
         modifier = Modifier.neonGlow(NeonCyan, radius = 4.dp, alpha = 0.08f)
     )
 }
@@ -141,16 +128,16 @@ private fun GhostTopBar(
 // ══════════════════════════════════════════════════════════════════════════
 
 private fun screenTitle(route: String?): String = when {
-    route == null                            -> "Ghost Nexora VPN"
-    route == Screen.Dashboard.route          -> "Dashboard"
-    route == Screen.Profiles.route           -> "Perfiles VPN"
-    route == Screen.CreateProfile.route      -> "Nuevo Perfil"
-    route.startsWith("edit_profile")         -> "Editar Perfil"
-    route == Screen.Import.route             -> "Importar Perfiles"
-    route == Screen.Export.route             -> "Exportar Perfiles"
-    route == Screen.History.route            -> "Historial"
-    route == Screen.Logs.route               -> "Registros"
-    route == Screen.Settings.route           -> "Ajustes"
-    route == Screen.About.route              -> "Acerca de"
-    else                                     -> "Ghost Nexora VPN"
+    route == null                        -> "Ghost Nexora VPN"
+    route == Screen.Dashboard.route      -> "Dashboard"
+    route == Screen.Profiles.route       -> "Perfiles VPN"
+    route == Screen.CreateProfile.route  -> "Nuevo Perfil"
+    route.startsWith("edit_profile")     -> "Editar Perfil"
+    route == Screen.Import.route         -> "Importar Perfiles"
+    route == Screen.Export.route         -> "Exportar Perfiles"
+    route == Screen.History.route        -> "Historial"
+    route == Screen.Logs.route           -> "Registros"
+    route == Screen.Settings.route       -> "Ajustes"
+    route == Screen.About.route          -> "Acerca de"
+    else                                 -> "Ghost Nexora VPN"
 }

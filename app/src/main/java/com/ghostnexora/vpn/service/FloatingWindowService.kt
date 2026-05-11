@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,18 +47,9 @@ import com.ghostnexora.vpn.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-/**
- * FloatingWindowService — Ventana flotante de control rápido VPN.
- *
- * Muestra una burbuja sobre otras apps con:
- * - Indicador de estado (color dinámico)
- * - Panel expandible con botones de acción
- * - Draggable (arrastrable)
- *
- * Requiere permiso SYSTEM_ALERT_WINDOW.
- */
 @AndroidEntryPoint
 class FloatingWindowService : android.app.Service(),
     LifecycleOwner, SavedStateRegistryOwner {
@@ -65,20 +57,16 @@ class FloatingWindowService : android.app.Service(),
     @Inject
     lateinit var repository: ProfileRepository
 
-    // ── WindowManager ─────────────────────────────────────────────────────
     private lateinit var windowManager: WindowManager
     private var bubbleView: ComposeView? = null
     private var bubbleParams: WindowManager.LayoutParams? = null
 
-    // ── Scope ─────────────────────────────────────────────────────────────
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
-    // ── Estado reactivo ───────────────────────────────────────────────────
-    private val _vpnState = mutableStateOf<VpnConnectionState>(VpnConnectionState.Disconnected)
+    private val _vpnState    = mutableStateOf<VpnConnectionState>(VpnConnectionState.Disconnected)
     private val _profileName = mutableStateOf("")
     private val _panelExpanded = mutableStateOf(false)
 
-    // ── Lifecycle para Compose en Service ─────────────────────────────────
     private val lifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle get() = lifecycleRegistry
 
@@ -94,7 +82,6 @@ class FloatingWindowService : android.app.Service(),
         super.onCreate()
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
-
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     }
 
@@ -102,10 +89,8 @@ class FloatingWindowService : android.app.Service(),
         startForeground(GhostNexoraApp.NOTIF_ID_FLOATING, buildNotification())
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
         lifecycleRegistry.currentState = Lifecycle.State.RESUMED
-
         showBubble()
         observeVpnState()
-
         return START_STICKY
     }
 
@@ -142,26 +127,25 @@ class FloatingWindowService : android.app.Service(),
             setViewTreeSavedStateRegistryOwner(this@FloatingWindowService)
 
             setContent {
-                val vpnState by _vpnState
+                val vpnState    by _vpnState
                 val profileName by _profileName
-                val expanded by _panelExpanded
+                val expanded    by _panelExpanded
 
                 FloatingBubbleContent(
-                    vpnState    = vpnState,
-                    profileName = profileName,
-                    expanded    = expanded,
-                    onToggle    = { _panelExpanded.value = !_panelExpanded.value },
-                    onConnect   = { sendConnectAction() },
+                    vpnState     = vpnState,
+                    profileName  = profileName,
+                    expanded     = expanded,
+                    onToggle     = { _panelExpanded.value = !_panelExpanded.value },
+                    onConnect    = { sendConnectAction() },
                     onDisconnect = { sendDisconnectAction() },
-                    onOpen      = { openMainApp() },
-                    onClose     = { stopSelf() }
+                    onOpen       = { openMainApp() },
+                    onClose      = { stopSelf() }
                 )
             }
         }
 
-        // Touch para arrastrar la burbuja
         var initialX = 0; var initialY = 0
-        var touchX = 0f; var touchY = 0f
+        var touchX   = 0f; var touchY   = 0f
 
         composeView.setOnTouchListener { _, event ->
             when (event.action) {
@@ -209,36 +193,36 @@ class FloatingWindowService : android.app.Service(),
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // ACCIONES
+    // ACCIONES — corregidas sin ambigüedad de putExtra
     // ══════════════════════════════════════════════════════════════════════
 
     private fun sendConnectAction() {
         serviceScope.launch {
-            val profileId = repository.activeProfileId
-                .kotlinx.coroutines.flow.first()
+            val profileId: String = repository.activeProfileId.first()
             if (profileId.isNotEmpty()) {
-                startService(Intent(this@FloatingWindowService, GhostVpnService::class.java).apply {
-                    action = GhostVpnService.ACTION_CONNECT
-                    putExtra(GhostVpnService.EXTRA_PROFILE_ID, profileId)
-                })
+                val intent = Intent(this@FloatingWindowService, GhostVpnService::class.java)
+                intent.action = GhostVpnService.ACTION_CONNECT
+                // Cast explícito a String para resolver ambigüedad de putExtra
+                intent.putExtra(GhostVpnService.EXTRA_PROFILE_ID, profileId as String)
+                startService(intent)
             }
         }
     }
 
     private fun sendDisconnectAction() {
-        startService(Intent(this, GhostVpnService::class.java).apply {
-            action = GhostVpnService.ACTION_DISCONNECT
-        })
+        val intent = Intent(this, GhostVpnService::class.java)
+        intent.action = GhostVpnService.ACTION_DISCONNECT
+        startService(intent)
     }
 
     private fun openMainApp() {
-        startActivity(Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        })
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        startActivity(intent)
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    // NOTIFICACIÓN DEL FOREGROUND
+    // NOTIFICACIÓN
     // ══════════════════════════════════════════════════════════════════════
 
     private fun buildNotification(): Notification {
@@ -260,7 +244,7 @@ class FloatingWindowService : android.app.Service(),
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// COMPOSABLE — CONTENIDO DE LA BURBUJA
+// COMPOSABLES
 // ══════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -274,58 +258,50 @@ private fun FloatingBubbleContent(
     onOpen: () -> Unit,
     onClose: () -> Unit
 ) {
-    val stateColor = stateColor(vpnState)
+    val color = stateColor(vpnState)
 
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // ── Panel expandido ────────────────────────────────────────────────
         AnimatedVisibility(
             visible = expanded,
             enter   = fadeIn() + slideInHorizontally { it },
             exit    = fadeOut() + slideOutHorizontally { it }
         ) {
             FloatingPanel(
-                vpnState    = vpnState,
-                profileName = profileName,
-                stateColor  = stateColor,
-                onConnect   = onConnect,
+                vpnState     = vpnState,
+                profileName  = profileName,
+                stateColor   = color,
+                onConnect    = onConnect,
                 onDisconnect = onDisconnect,
-                onOpen      = onOpen
+                onOpen       = onOpen
             )
         }
 
-        // ── Burbuja principal ──────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .size(Dimens.BubbleSize)
                 .clip(CircleShape)
                 .background(SurfaceDark)
-                .border(2.dp, stateColor, CircleShape)
-                .neonGlow(stateColor, radius = 8.dp, alpha = 0.4f)
+                .border(2.dp, color, CircleShape)
+                .neonGlow(color, radius = 8.dp, alpha = 0.4f)
                 .clickable(onClick = onToggle),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = when (vpnState) {
-                        is VpnConnectionState.Connected  -> Icons.Filled.Lock
-                        is VpnConnectionState.Connecting -> Icons.Filled.Sync
-                        is VpnConnectionState.Error      -> Icons.Filled.ErrorOutline
-                        else                             -> Icons.Filled.LockOpen
-                    },
-                    contentDescription = null,
-                    tint     = stateColor,
-                    modifier = Modifier.size(Dimens.BubbleIconSize)
-                )
-            }
+            Icon(
+                imageVector = when (vpnState) {
+                    is VpnConnectionState.Connected  -> Icons.Filled.Lock
+                    is VpnConnectionState.Connecting -> Icons.Filled.Sync
+                    is VpnConnectionState.Error      -> Icons.Filled.ErrorOutline
+                    else                             -> Icons.Filled.LockOpen
+                },
+                contentDescription = null,
+                tint     = color,
+                modifier = Modifier.size(Dimens.BubbleIconSize)
+            )
         }
 
-        // ── Botón cerrar burbuja ───────────────────────────────────────────
         if (expanded) {
             Box(
                 modifier = Modifier
@@ -365,7 +341,6 @@ private fun FloatingPanel(
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Estado
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -378,7 +353,7 @@ private fun FloatingPanel(
             )
             Text(
                 text  = vpnState.label(),
-                style = androidx.compose.ui.text.TextStyle(
+                style = TextStyle(
                     fontSize   = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color      = stateColor
@@ -386,49 +361,26 @@ private fun FloatingPanel(
             )
         }
 
-        // Nombre del perfil
         if (profileName.isNotEmpty()) {
             Text(
                 text  = profileName,
-                style = androidx.compose.ui.text.TextStyle(
-                    fontSize = 11.sp,
-                    color    = TextSecondary
-                ),
+                style = TextStyle(fontSize = 11.sp, color = TextSecondary),
                 maxLines = 1
             )
         }
 
         NeonDivider(color = BorderSubtle)
 
-        // Botones
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            // Conectar / Desconectar
             if (vpnState.isConnected) {
-                FloatingActionBtn(
-                    icon    = Icons.Filled.PowerSettingsNew,
-                    label   = "Desconectar",
-                    color   = NeonRed,
-                    onClick = onDisconnect
-                )
+                FloatingActionBtn(Icons.Filled.PowerSettingsNew, "Desconectar", NeonRed, onDisconnect)
             } else if (vpnState.isDisconnected || vpnState.hasError) {
-                FloatingActionBtn(
-                    icon    = Icons.Filled.PlayArrow,
-                    label   = "Conectar",
-                    color   = NeonGreen,
-                    onClick = onConnect
-                )
+                FloatingActionBtn(Icons.Filled.PlayArrow, "Conectar", NeonGreen, onConnect)
             }
-
-            // Abrir app
-            FloatingActionBtn(
-                icon    = Icons.Filled.OpenInFull,
-                label   = "Abrir",
-                color   = NeonCyan,
-                onClick = onOpen
-            )
+            FloatingActionBtn(Icons.Filled.OpenInFull, "Abrir", NeonCyan, onOpen)
         }
     }
 }
@@ -453,19 +405,8 @@ private fun FloatingActionBtn(
                 .border(1.dp, color.copy(0.4f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = color,
-                modifier = Modifier.size(16.dp)
-            )
+            Icon(icon, label, tint = color, modifier = Modifier.size(16.dp))
         }
-        Text(
-            text  = label,
-            style = androidx.compose.ui.text.TextStyle(
-                fontSize = 9.sp,
-                color    = color
-            )
-        )
+        Text(label, style = TextStyle(fontSize = 9.sp, color = color))
     }
 }

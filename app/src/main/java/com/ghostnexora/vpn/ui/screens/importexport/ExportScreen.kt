@@ -22,10 +22,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ghostnexora.vpn.data.model.VpnProfile
 import com.ghostnexora.vpn.ui.theme.*
 
-// ══════════════════════════════════════════════════════════════════════════
-// EXPORT SCREEN
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
 fun ExportScreen(
     onBack: () -> Unit,
@@ -35,7 +31,6 @@ fun ExportScreen(
     val profiles by viewModel.allProfiles.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Feedback de éxito/error
     LaunchedEffect(state.exportSuccess) {
         if (state.exportSuccess) {
             snackbarHostState.showSnackbar("${state.exportedCount} perfil(es) exportado(s)")
@@ -70,16 +65,11 @@ fun ExportScreen(
                 .padding(Dimens.ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXL)
         ) {
-
-            // ── Header ──────────────────────────────────────────────────────
             item { ExportHeader() }
 
-            // ── Sin perfiles ────────────────────────────────────────────────
             if (profiles.isEmpty()) {
                 item { ExportEmptyState() }
             } else {
-
-                // ── Barra de selección ───────────────────────────────────────
                 item {
                     SelectionBar(
                         totalCount    = profiles.size,
@@ -88,7 +78,6 @@ fun ExportScreen(
                     )
                 }
 
-                // ── Lista de perfiles ────────────────────────────────────────
                 items(profiles, key = { it.id }) { profile ->
                     ExportProfileCard(
                         profile    = profile,
@@ -97,7 +86,6 @@ fun ExportScreen(
                     )
                 }
 
-                // ── Botón de exportar ────────────────────────────────────────
                 item {
                     ExportActionButton(
                         selectedCount = state.selectedIds.size,
@@ -112,10 +100,6 @@ fun ExportScreen(
         }
     }
 }
-
-// ══════════════════════════════════════════════════════════════════════════
-// COMPONENTES
-// ══════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun ExportHeader() {
@@ -146,8 +130,7 @@ private fun ExportHeader() {
                 Text(
                     text  = "Exportar Perfiles",
                     style = MaterialTheme.typography.titleMedium.copy(
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold
+                        color = TextPrimary, fontWeight = FontWeight.Bold
                     )
                 )
                 Text(
@@ -159,8 +142,6 @@ private fun ExportHeader() {
         }
     }
 }
-
-// ── Barra de selección ────────────────────────────────────────────────────
 
 @Composable
 private fun SelectionBar(
@@ -192,8 +173,6 @@ private fun SelectionBar(
     }
 }
 
-// ── Tarjeta de perfil para exportar ──────────────────────────────────────
-
 @Composable
 private fun ExportProfileCard(
     profile: VpnProfile,
@@ -213,7 +192,7 @@ private fun ExportProfileCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceMD)
         ) {
-            // Checkbox visual
+            // Checkbox — sin AnimatedVisibility dentro de Row
             Box(
                 modifier = Modifier
                     .size(22.dp)
@@ -226,11 +205,7 @@ private fun ExportProfileCard(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                AnimatedVisibility(
-                    visible = isSelected,
-                    enter   = scaleIn(initialScale = 0.5f),
-                    exit    = scaleOut(targetScale = 0.5f)
-                ) {
+                if (isSelected) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = null,
@@ -240,7 +215,6 @@ private fun ExportProfileCard(
                 }
             }
 
-            // Ícono del perfil
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -256,7 +230,6 @@ private fun ExportProfileCard(
                 )
             }
 
-            // Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text     = profile.name.ifEmpty { "Sin nombre" },
@@ -275,7 +248,6 @@ private fun ExportProfileCard(
                 )
             }
 
-            // Tags count
             if (profile.tags.isNotEmpty()) {
                 Text(
                     text  = "${profile.tags.size} tag(s)",
@@ -286,8 +258,6 @@ private fun ExportProfileCard(
         }
     }
 }
-
-// ── Botón de exportar ─────────────────────────────────────────────────────
 
 @Composable
 private fun ExportActionButton(
@@ -310,7 +280,6 @@ private fun ExportActionButton(
                 trackColor = SurfaceElevated
             )
         }
-
         GhostButton(
             text           = label,
             onClick        = onClick,
@@ -319,8 +288,6 @@ private fun ExportActionButton(
             contentColor   = TextOnAccent,
             modifier       = Modifier.fillMaxWidth()
         )
-
-        // Nota informativa
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)
@@ -339,8 +306,6 @@ private fun ExportActionButton(
         }
     }
 }
-
-// ── Estado vacío ──────────────────────────────────────────────────────────
 
 @Composable
 private fun ExportEmptyState() {
