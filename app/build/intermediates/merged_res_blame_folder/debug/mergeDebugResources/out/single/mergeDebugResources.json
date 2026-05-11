@@ -1,0 +1,66 @@
+[
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-xxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-mdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-hdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-xxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/xml_backup_rules.xml.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/drawable_ic_splash_logo.xml.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/drawable/ic_splash_logo.xml"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/xml_network_security_config.xml.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/xml/network_security_config.xml"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/drawable_ic_vpn_notification.xml.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/drawable/ic_vpn_notification.xml"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/xml_file_provider_paths.xml.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/xml/file_provider_paths.xml"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-xhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/xml_data_extraction_rules.xml.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.ghostnexora.vpn.app-debug-64:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.ghostnexora.vpn.app-main-66:/mipmap-xxxhdpi/ic_launcher.png"
+    }
+]

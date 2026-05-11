@@ -1,0 +1,38 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!--
+        Logo Ghost Nexora VPN para splash screen.
+        Escudo estilizado con acento neon cian sobre fondo oscuro.
+    -->
+
+    <!-- Fondo circular oscuro -->
+    <path
+        android:fillColor="#0A0E1A"
+        android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0"/>
+
+    <!-- Escudo principal — neon cian -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M54,18L27,30v18
+                          c0,16.56 11.52,32.04 27,35.88
+                          C69.48,80.04 81,64.56 81,48V30L54,18z
+                          M54,53.88V82.08
+                          C40.68,78.48 30,65.04 30,48V32.4L54,21.6v32.28z"/>
+
+    <!-- Aro interior — acento de brillo -->
+    <path
+        android:fillColor="#004E63"
+        android:pathData="M54,26L33,36v12
+                          c0,11.16 7.56,21.6 18,24.84
+                          V26z"/>
+
+    <!-- Línea de brillo superior -->
+    <path
+        android:fillColor="#80FFFFFF"
+        android:pathData="M54,22L31,33v2L54,24L77,35v-2z"/>
+
+</vector>
