@@ -31,10 +31,6 @@ import com.ghostnexora.vpn.data.model.VpnProfile
 import com.ghostnexora.vpn.ui.theme.*
 import com.ghostnexora.vpn.util.toSessionTime
 
-// ══════════════════════════════════════════════════════════════════════════
-// DASHBOARD SCREEN
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
 fun DashboardScreen(
     onNavigateToProfiles: () -> Unit,
@@ -45,25 +41,22 @@ fun DashboardScreen(
     val activity = context as Activity
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Launcher para el diálogo de permiso VPN del sistema
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
+        ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) viewModel.onVpnPermissionGranted()
         else viewModel.onVpnPermissionDenied()
     }
 
-    // Lanzar diálogo VPN cuando el ViewModel lo solicite
     LaunchedEffect(uiState.pendingVpnPermissionIntent) {
-        uiState.pendingVpnPermissionIntent?.let {
-            vpnPermissionLauncher.launch(it)
+        uiState.pendingVpnPermissionIntent?.let { intent ->
+            vpnPermissionLauncher.launch(intent)
         }
     }
 
-    // Snackbar
     LaunchedEffect(uiState.snackbarMessage) {
-        uiState.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(it)
+        uiState.snackbarMessage?.let { msg ->
+            snackbarHostState.showSnackbar(message = msg)
             viewModel.clearSnackbar()
         }
     }
@@ -71,533 +64,156 @@ fun DashboardScreen(
     Scaffold(
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
-                Snackbar(
-                    snackbarData = data,
-                    containerColor = SurfaceElevated,
-                    contentColor = TextPrimary,
-                    shape = SnackbarShape
-                )
+                Snackbar(snackbarData = data, containerColor = SurfaceElevated,
+                    contentColor = TextPrimary, shape = SnackbarShape)
             }
         },
         containerColor = Color.Transparent
     ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundGradient())
-                .padding(padding)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().background(backgroundGradient()).padding(padding)) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                     .padding(Dimens.ScreenPadding),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXL)
             ) {
                 Spacer(Modifier.height(Dimens.SpaceSM))
-
-                // ── 1. Estado de conexión + botón principal ─────────────────
-                ConnectionSection(
-                    state = uiState.connectionState,
-                    onAction = { viewModel.onMainAction(activity) }
-                )
-
-                // ── 2. Timer de sesión ──────────────────────────────────────
-                AnimatedVisibility(
-                    visible = uiState.isConnected,
-                    enter = fadeIn() + expandVertically(),
-                    exit  = fadeOut() + shrinkVertically()
-                ) {
-                    SessionInfoRow(
-                        elapsed  = uiState.sessionElapsed,
-                        serverIp = uiState.serverIp
-                    )
+                ConnectionSection(state = uiState.connectionState, onAction = { viewModel.onMainAction(activity) })
+                AnimatedVisibility(visible = uiState.isConnected, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
+                    SessionInfoRow(elapsed = uiState.sessionElapsed, serverIp = uiState.serverIp)
                 }
-
-                // ── 3. Perfil activo ────────────────────────────────────────
-                ActiveProfileCard(
-                    profile             = uiState.activeProfile,
-                    connectionState     = uiState.connectionState,
-                    onChangeProfile     = onNavigateToProfiles
-                )
-
-                // ── 4. Accesos rápidos ──────────────────────────────────────
-                QuickActionsRow(
-                    isConnected         = uiState.isConnected,
-                    hasProfiles         = uiState.hasProfiles,
-                    onViewProfiles      = onNavigateToProfiles,
-                    onDisconnect        = { viewModel.disconnect() }
-                )
-
+                ActiveProfileCard(profile = uiState.activeProfile, connectionState = uiState.connectionState, onChangeProfile = onNavigateToProfiles)
+                QuickActionsRow(isConnected = uiState.isConnected, hasProfiles = uiState.hasProfiles, onViewProfiles = onNavigateToProfiles, onDisconnect = { viewModel.disconnect() })
                 Spacer(Modifier.height(Dimens.SpaceLG))
             }
         }
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// SECCIÓN DE CONEXIÓN — Botón principal + estado
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
-private fun ConnectionSection(
-    state: VpnConnectionState,
-    onAction: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXL)
-    ) {
-        // Etiqueta de estado animada
-        AnimatedContent(
-            targetState = state.label(),
-            transitionSpec = {
-                fadeIn(tween(300)) togetherWith fadeOut(tween(200))
-            },
-            label = "status_label"
-        ) { label ->
-            Text(
-                text = label,
-                style = StatusLabelStyle.copy(
-                    color = stateColor(state),
-                    letterSpacing = 3.sp
-                )
-            )
+private fun ConnectionSection(state: VpnConnectionState, onAction: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXXL)) {
+        AnimatedContent(targetState = state.label(), transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) }, label = "status_label") { label ->
+            Text(text = label, style = StatusLabelStyle.copy(color = stateColor(state), letterSpacing = 3.sp))
         }
-
-        // Botón circular principal
-        MainActionButton(
-            state    = state,
-            onClick  = onAction,
-            size     = Dimens.ActionButtonSize
-        )
-
-        // Subtexto contextual
-        AnimatedContent(
-            targetState = stateSubtext(state),
-            transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(200)) },
-            label = "status_subtext"
-        ) { subtext ->
-            Text(
-                text  = subtext,
-                style = MaterialTheme.typography.bodySmall,
-                color = TextTertiary,
-                textAlign = TextAlign.Center
-            )
+        MainActionButton(state = state, onClick = onAction)
+        AnimatedContent(targetState = stateSubtext(state), transitionSpec = { fadeIn(tween(250)) togetherWith fadeOut(tween(200)) }, label = "subtext") { subtext ->
+            Text(text = subtext, style = MaterialTheme.typography.bodySmall, color = TextTertiary, textAlign = TextAlign.Center)
         }
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// BOTÓN PRINCIPAL CIRCULAR CON ANIMACIONES
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
-private fun MainActionButton(
-    state: VpnConnectionState,
-    onClick: () -> Unit,
-    size: Dp = 120.dp
-) {
+private fun MainActionButton(state: VpnConnectionState, onClick: () -> Unit, size: Dp = Dimens.ActionButtonSize) {
     val color = stateColor(state)
     val isConnecting = state is VpnConnectionState.Connecting
-
-    // Rotación del anillo cuando conecta
-    val rotation by rememberInfiniteTransition(label = "ring_rotation")
-        .animateFloat(
-            initialValue = 0f,
-            targetValue  = 360f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1800, easing = LinearEasing)
-            ),
-            label = "ring_angle"
-        )
-
-    // Pulso del glow exterior
-    val glowAlpha by rememberInfiniteTransition(label = "glow_pulse")
-        .animateFloat(
-            initialValue = 0.2f,
-            targetValue  = 0.55f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1200, easing = EaseInOut),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "glow_alpha"
-        )
-
-    // Escala del botón al presionar
-    val scale by animateFloatAsState(
-        targetValue = if (state is VpnConnectionState.Connecting) 0.96f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "btn_scale"
-    )
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(size + 32.dp)         // espacio para el glow exterior
-    ) {
-        // ── Glow exterior ─────────────────────────────────────────────────
-        Box(
-            modifier = Modifier
-                .size(size + 24.dp)
-                .clip(CircleShape)
-                .background(color.copy(alpha = if (state.isConnected) glowAlpha else 0.08f))
-        )
-
-        // ── Anillo giratorio (solo al conectar) ───────────────────────────
+    val rotation by rememberInfiniteTransition(label = "rot").animateFloat(0f, 360f, infiniteRepeatable(tween(1800, easing = LinearEasing)), label = "r")
+    val glowAlpha by rememberInfiniteTransition(label = "glow").animateFloat(0.2f, 0.55f, infiniteRepeatable(tween(1200, easing = EaseInOut), RepeatMode.Reverse), label = "g")
+    val scale by animateFloatAsState(if (isConnecting) 0.96f else 1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy), label = "s")
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(size + 32.dp)) {
+        Box(Modifier.size(size + 24.dp).clip(CircleShape).background(color.copy(if (state.isConnected) glowAlpha else 0.08f)))
         if (isConnecting) {
-            Canvas(
-                modifier = Modifier
-                    .size(size + 12.dp)
-                    .rotate(rotation)
-            ) {
-                drawArc(
-                    color      = color,
-                    startAngle = 0f,
-                    sweepAngle = 260f,
-                    useCenter  = false,
-                    style      = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                )
+            Canvas(Modifier.size(size + 12.dp).rotate(rotation)) {
+                drawArc(color, 0f, 260f, false, Stroke(3.dp.toPx(), cap = StrokeCap.Round))
             }
         }
-
-        // ── Círculo principal ─────────────────────────────────────────────
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(size)
-                .scale(scale)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            color.copy(alpha = 0.22f),
-                            SurfaceVariant
-                        )
-                    )
-                )
-                .border(
-                    width = Dimens.BorderAccent,
-                    color = color,
-                    shape = CircleShape
-                )
-                .clickable(
-                    enabled = state !is VpnConnectionState.Disconnecting,
-                    onClick = onClick
-                )
+            modifier = Modifier.size(size).scale(scale).clip(CircleShape)
+                .background(Brush.radialGradient(listOf(color.copy(0.22f), SurfaceVariant)))
+                .border(Dimens.BorderAccent, color, CircleShape)
+                .clickable(enabled = state !is VpnConnectionState.Disconnecting, onClick = onClick)
         ) {
-            // Icono animado según estado
-            AnimatedContent(
-                targetState = state,
-                transitionSpec = {
-                    scaleIn(tween(200)) + fadeIn(tween(200)) togetherWith
-                    scaleOut(tween(150)) + fadeOut(tween(150))
-                },
-                label = "btn_icon"
-            ) { s ->
-                Icon(
-                    imageVector = stateIcon(s),
-                    contentDescription = s.actionLabel(),
-                    tint = color,
-                    modifier = Modifier.size(Dimens.ActionButtonIconSize)
-                )
+            AnimatedContent(state, { scaleIn(tween(200)) + fadeIn(tween(200)) togetherWith scaleOut(tween(150)) + fadeOut(tween(150)) }, label = "icon") { s ->
+                Icon(stateIcon(s), s.actionLabel(), tint = color, modifier = Modifier.size(Dimens.ActionButtonIconSize))
             }
         }
-
-        // ── Texto del botón debajo ─────────────────────────────────────────
-        Text(
-            text  = state.actionLabel(),
-            style = MaterialTheme.typography.labelLarge.copy(
-                color = color,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
-            ),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .offset(y = 20.dp)
-        )
+        Text(state.actionLabel(), Modifier.align(Alignment.BottomCenter).offset(y = 20.dp),
+            style = MaterialTheme.typography.labelLarge.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp))
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// FILA DE INFO DE SESIÓN (timer + IP)
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
-private fun SessionInfoRow(
-    elapsed: Long,
-    serverIp: String
-) {
-    GhostCard(
-        borderColor = NeonGreen.copy(alpha = 0.3f),
-        glowColor   = NeonGreen,
-        backgroundColor = NeonGreen.copy(alpha = 0.05f),
-        contentPadding = PaddingValues(horizontal = Dimens.SpaceXXL, vertical = Dimens.SpaceMD)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Timer
-            SessionInfoItem(
-                icon  = Icons.Filled.Timer,
-                label = "Tiempo",
-                value = elapsed.toSessionTime(),
-                valueColor = NeonGreen
-            )
-
-            VerticalDivider(
-                modifier = Modifier.height(36.dp),
-                color = BorderSubtle
-            )
-
-            // IP del servidor
-            SessionInfoItem(
-                icon  = Icons.Filled.Language,
-                label = "Servidor",
-                value = serverIp.ifEmpty { "--" },
-                valueColor = NeonCyan,
-                isMono = true
-            )
+private fun SessionInfoRow(elapsed: Long, serverIp: String) {
+    GhostCard(NeonGreen.copy(0.3f), NeonGreen, NeonGreen.copy(0.05f), PaddingValues(horizontal = Dimens.SpaceXXL, vertical = Dimens.SpaceMD)) {
+        Row(Modifier.fillMaxWidth(), Arrangement.SpaceEvenly, Alignment.CenterVertically) {
+            SessionInfoItem(Icons.Filled.Timer, "Tiempo", elapsed.toSessionTime(), NeonGreen)
+            VerticalDivider(Modifier.height(36.dp), color = BorderSubtle)
+            SessionInfoItem(Icons.Filled.Language, "Servidor", serverIp.ifEmpty { "--" }, NeonCyan, true)
         }
     }
 }
 
 @Composable
-private fun SessionInfoItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    value: String,
-    valueColor: Color,
-    isMono: Boolean = false
-) {
+private fun SessionInfoItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, value: String, valueColor: Color, isMono: Boolean = false) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = valueColor.copy(alpha = 0.7f),
-            modifier = Modifier.size(Dimens.IconSM)
-        )
+        Icon(icon, null, tint = valueColor.copy(0.7f), modifier = Modifier.size(Dimens.IconSM))
         Spacer(Modifier.height(Dimens.SpaceXS))
-        Text(
-            text  = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = TextTertiary
-        )
-        Text(
-            text  = value,
-            style = if (isMono) MonoStyle.copy(fontSize = 13.sp, color = valueColor)
-                    else SessionTimerStyle.copy(fontSize = 18.sp, color = valueColor),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Text(label, style = MaterialTheme.typography.labelSmall, color = TextTertiary)
+        Text(value, style = if (isMono) MonoStyle.copy(13.sp, color = valueColor) else SessionTimerStyle.copy(18.sp, color = valueColor), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// TARJETA DE PERFIL ACTIVO
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
-private fun ActiveProfileCard(
-    profile: VpnProfile?,
-    connectionState: VpnConnectionState,
-    onChangeProfile: () -> Unit
-) {
-    GhostCard(
-        borderColor = if (connectionState.isConnected) NeonCyan.copy(0.4f) else BorderSubtle,
-        glowColor   = if (connectionState.isConnected) NeonCyan else null
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Ícono del perfil
-            Box(
-                modifier = Modifier
-                    .size(Dimens.ProfileIconSize)
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(NeonCyan.copy(alpha = 0.1f))
-                    .border(Dimens.BorderThin, NeonCyan.copy(0.3f), MaterialTheme.shapes.medium),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.VpnKey,
-                    contentDescription = null,
-                    tint = if (profile != null) NeonCyan else TextTertiary,
-                    modifier = Modifier.size(Dimens.IconMD)
-                )
+private fun ActiveProfileCard(profile: VpnProfile?, connectionState: VpnConnectionState, onChangeProfile: () -> Unit) {
+    GhostCard(if (connectionState.isConnected) NeonCyan.copy(0.4f) else BorderSubtle, if (connectionState.isConnected) NeonCyan else null) {
+        Row(Modifier.fillMaxWidth(), Alignment.CenterVertically, Arrangement.SpaceBetween) {
+            Box(Modifier.size(Dimens.ProfileIconSize).clip(MaterialTheme.shapes.medium).background(NeonCyan.copy(0.1f)).border(Dimens.BorderThin, NeonCyan.copy(0.3f), MaterialTheme.shapes.medium), Alignment.Center) {
+                Icon(Icons.Filled.VpnKey, null, tint = if (profile != null) NeonCyan else TextTertiary, modifier = Modifier.size(Dimens.IconMD))
             }
-
             Spacer(Modifier.width(Dimens.SpaceMD))
-
-            // Info del perfil
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = profile?.name ?: "Sin perfil seleccionado",
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        color = if (profile != null) TextPrimary else TextTertiary,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            Column(Modifier.weight(1f)) {
+                Text(profile?.name ?: "Sin perfil seleccionado",
+                    style = MaterialTheme.typography.titleSmall.copy(color = if (profile != null) TextPrimary else TextTertiary, fontWeight = FontWeight.SemiBold),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (profile != null) {
-                    Text(
-                        text  = "${profile.host}:${profile.port}  ·  ${profile.method.uppercase()}",
-                        style = MonoStyle.copy(fontSize = 11.sp, color = TextTertiary),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    // Tags
+                    Text("${profile.host}:${profile.port}  ·  ${profile.method.uppercase()}", style = MonoStyle.copy(11.sp, color = TextTertiary), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (profile.tags.isNotEmpty()) {
                         Spacer(Modifier.height(Dimens.SpaceXS))
-                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
-                            profile.tags.take(3).forEach { tag ->
-                                ProfileTagChip(tag)
-                            }
-                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) { profile.tags.take(3).forEach { ProfileTagChip(it) } }
                     }
-                } else {
-                    Text(
-                        text  = "Toca para seleccionar un perfil",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextTertiary
-                    )
-                }
+                } else { Text("Toca para seleccionar un perfil", style = MaterialTheme.typography.bodySmall, color = TextTertiary) }
             }
-
-            // Botón cambiar perfil (solo si no está conectado)
-            if (!connectionState.isConnected) {
-                IconButton(onClick = onChangeProfile) {
-                    Icon(
-                        imageVector = Icons.Filled.SwapHoriz,
-                        contentDescription = "Cambiar perfil",
-                        tint = NeonCyan
-                    )
-                }
-            }
+            if (!connectionState.isConnected) { IconButton(onChangeProfile) { Icon(Icons.Filled.SwapHoriz, "Cambiar", tint = NeonCyan) } }
         }
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// ACCESOS RÁPIDOS
-// ══════════════════════════════════════════════════════════════════════════
-
 @Composable
-private fun QuickActionsRow(
-    isConnected: Boolean,
-    hasProfiles: Boolean,
-    onViewProfiles: () -> Unit,
-    onDisconnect: () -> Unit
-) {
+private fun QuickActionsRow(isConnected: Boolean, hasProfiles: Boolean, onViewProfiles: () -> Unit, onDisconnect: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSM)) {
-        Text(
-            text  = "ACCESOS RÁPIDOS",
-            style = MaterialTheme.typography.labelSmall.copy(
-                color = TextTertiary,
-                letterSpacing = 2.sp
-            )
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceSM)
-        ) {
-            // Ver perfiles
-            QuickActionCard(
-                icon  = Icons.Filled.VpnKey,
-                label = "Perfiles",
-                color = NeonBlue,
-                modifier = Modifier.weight(1f),
-                onClick = onViewProfiles
-            )
-
-            // Desconectar rápido (solo si conectado)
-            QuickActionCard(
-                icon    = Icons.Filled.PowerSettingsNew,
-                label   = if (isConnected) "Desconectar" else "Desconectado",
-                color   = if (isConnected) NeonRed else TextTertiary,
-                enabled = isConnected,
-                modifier = Modifier.weight(1f),
-                onClick = onDisconnect
-            )
-
-            // Estado del sistema
-            QuickActionCard(
-                icon  = Icons.Filled.Shield,
-                label = if (isConnected) "Protegido" else "Sin protección",
-                color = if (isConnected) NeonGreen else NeonAmber,
-                modifier = Modifier.weight(1f),
-                onClick = {}
-            )
+        Text("ACCESOS RÁPIDOS", style = MaterialTheme.typography.labelSmall.copy(color = TextTertiary, letterSpacing = 2.sp))
+        Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(Dimens.SpaceSM)) {
+            QuickActionCard(Icons.Filled.VpnKey, "Perfiles", NeonBlue, Modifier.weight(1f)) { onViewProfiles() }
+            QuickActionCard(Icons.Filled.PowerSettingsNew, if (isConnected) "Desconectar" else "Desconectado", if (isConnected) NeonRed else TextTertiary, Modifier.weight(1f), isConnected) { onDisconnect() }
+            QuickActionCard(Icons.Filled.Shield, if (isConnected) "Protegido" else "Sin protección", if (isConnected) NeonGreen else NeonAmber, Modifier.weight(1f)) {}
         }
     }
 }
 
 @Composable
-private fun QuickActionCard(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    onClick: () -> Unit
-) {
-    val resolvedColor = if (enabled) color else TextTertiary
-
-    GhostCard(
-        modifier = modifier
-            .clickable(enabled = enabled, onClick = onClick),
-        borderColor = resolvedColor.copy(alpha = 0.3f),
-        backgroundColor = resolvedColor.copy(alpha = 0.06f),
-        contentPadding = PaddingValues(Dimens.SpaceMD)
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = resolvedColor,
-                modifier = Modifier.size(Dimens.IconLG)
-            )
-            Text(
-                text      = label,
-                style     = MaterialTheme.typography.labelSmall,
-                color     = resolvedColor,
-                textAlign = TextAlign.Center,
-                maxLines  = 1,
-                overflow  = TextOverflow.Ellipsis
-            )
+private fun QuickActionCard(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, color: Color, modifier: Modifier = Modifier, enabled: Boolean = true, onClick: () -> Unit) {
+    val c = if (enabled) color else TextTertiary
+    GhostCard(modifier.clickable(enabled = enabled, onClick = onClick), c.copy(0.3f), null, c.copy(0.06f), PaddingValues(Dimens.SpaceMD)) {
+        Column(Alignment.CenterHorizontally, Arrangement.spacedBy(Dimens.SpaceXS), Modifier.fillMaxWidth()) {
+            Icon(icon, label, tint = c, modifier = Modifier.size(Dimens.IconLG))
+            Text(label, style = MaterialTheme.typography.labelSmall, color = c, textAlign = TextAlign.Center, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
-// ══════════════════════════════════════════════════════════════════════════
-// HELPERS LOCALES
-// ══════════════════════════════════════════════════════════════════════════
-
-private fun stateIcon(
-    state: VpnConnectionState
-): androidx.compose.ui.graphics.vector.ImageVector = when (state) {
-    is VpnConnectionState.Connected     -> Icons.Filled.Lock
-    is VpnConnectionState.Connecting    -> Icons.Filled.Sync
+private fun stateIcon(s: VpnConnectionState): androidx.compose.ui.graphics.vector.ImageVector = when (s) {
+    is VpnConnectionState.Connected -> Icons.Filled.Lock
+    is VpnConnectionState.Connecting -> Icons.Filled.Sync
     is VpnConnectionState.Disconnecting -> Icons.Filled.Sync
-    is VpnConnectionState.Disconnected  -> Icons.Filled.LockOpen
-    is VpnConnectionState.Error         -> Icons.Filled.ErrorOutline
+    is VpnConnectionState.Disconnected -> Icons.Filled.LockOpen
+    is VpnConnectionState.Error -> Icons.Filled.ErrorOutline
 }
 
 private fun stateSubtext(state: VpnConnectionState): String = when (state) {
-    is VpnConnectionState.Disconnected  -> "Presiona para conectar"
-    is VpnConnectionState.Connecting    -> "Estableciendo túnel seguro…"
-    is VpnConnectionState.Connected     -> "Tu tráfico está protegido"
-    is VpnConnectionState.Disconnecting -> "Cerrando conexión…"
-    is VpnConnectionState.Error         -> state.message.ifEmpty { "Fallo en la conexión" }
+    is VpnConnectionState.Disconnected -> "Presiona para conectar"
+    is VpnConnectionState.Connecting -> "Estableciendo túnel seguro\u2026"
+    is VpnConnectionState.Connected -> "Tu tr\u00e1fico est\u00e1 protegido"
+    is VpnConnectionState.Disconnecting -> "Cerrando conexi\u00f3n\u2026"
+    is VpnConnectionState.Error -> state.message.ifEmpty { "Fallo en la conexi\u00f3n" }
 }
