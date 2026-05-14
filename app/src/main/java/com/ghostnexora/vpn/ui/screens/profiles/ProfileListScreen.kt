@@ -51,7 +51,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ghostnexora.vpn.data.model.VpnProfile
 import com.ghostnexora.vpn.ui.theme.BackgroundDark
 import com.ghostnexora.vpn.ui.theme.BorderNormal
@@ -76,8 +75,8 @@ fun ProfileListScreen(
     onEditProfile: (String) -> Unit,
     viewModel: ProfileListViewModel = hiltViewModel()
 ) {
-    val profiles by viewModel.profiles.collectAsStateWithLifecycle()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val profiles by viewModel.profiles.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var profileToDelete by remember { mutableStateOf<VpnProfile?>(null) }
 

@@ -34,6 +34,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -44,7 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ghostnexora.vpn.ui.theme.BackgroundDark
 import com.ghostnexora.vpn.ui.theme.BorderNormal
 import com.ghostnexora.vpn.ui.theme.Dimens
@@ -64,7 +64,7 @@ fun ImportScreen(
     onBack: () -> Unit,
     viewModel: ImportExportViewModel = hiltViewModel()
 ) {
-    val state by viewModel.importState.collectAsStateWithLifecycle()
+    val state by viewModel.importState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val pickerLauncher = rememberLauncherForActivityResult(
