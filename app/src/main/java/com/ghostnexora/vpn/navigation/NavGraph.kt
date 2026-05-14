@@ -71,10 +71,9 @@ fun GhostNavHost(
         // ── Lista de perfiles ──────────────────────────────────────────────
         composable(Screen.Profiles.route) {
             ProfileListScreen(
-                onNavigateToCreate = {
-                    navController.navigate(Screen.CreateProfile.route)
-                },
-                onNavigateToEdit = { profileId ->
+                onBack = { navController.popBackStack() },
+                onCreateNew = { navController.navigate(Screen.CreateProfile.route) },
+                onEditProfile = { profileId ->
                     navController.navigate(Screen.EditProfile.createRoute(profileId))
                 }
             )
@@ -84,7 +83,6 @@ fun GhostNavHost(
         composable(Screen.CreateProfile.route) {
             CreateEditProfileScreen(
                 profileId = null,
-                onSaved = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -102,7 +100,6 @@ fun GhostNavHost(
                 ?.getString(Screen.EditProfile.ARG_PROFILE_ID)
             CreateEditProfileScreen(
                 profileId = profileId,
-                onSaved = { navController.popBackStack() },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -124,12 +121,12 @@ fun GhostNavHost(
 
         // ── Logs ───────────────────────────────────────────────────────────
         composable(Screen.Logs.route) {
-            LogsScreen()
+            LogsScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Ajustes ────────────────────────────────────────────────────────
         composable(Screen.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
 
         // ── Acerca de ──────────────────────────────────────────────────────

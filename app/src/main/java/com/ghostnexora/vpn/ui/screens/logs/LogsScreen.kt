@@ -89,7 +89,7 @@ private fun LogItem(log: com.ghostnexora.vpn.data.model.LogEntry) {
     GhostCard(
         backgroundColor = SurfaceVariant,
         borderColor = BorderSubtle,
-        padding = PaddingValues(Dimens.SpaceMD)
+        contentPadding = PaddingValues(Dimens.SpaceMD)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
             Row(
