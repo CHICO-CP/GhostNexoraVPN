@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.ghostnexora.vpn.ui.screens.importexport
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -58,6 +60,8 @@ import com.ghostnexora.vpn.ui.theme.TextOnAccent
 import com.ghostnexora.vpn.ui.theme.TextPrimary
 import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 @Composable
 fun ImportScreen(
@@ -126,7 +130,7 @@ fun ImportScreen(
                                 .background(NeonCyan.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Filled.FileDownload, null, tint = NeonCyan, modifier = Modifier.size(Dimens.IconXXL))
+                            Icon(Icons.Filled.FileDownload, null, tint = NeonCyan, modifier = Modifier.size(Dimens.IconXL))
                         }
 
                         Text(

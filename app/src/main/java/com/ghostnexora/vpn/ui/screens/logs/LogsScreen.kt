@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.ghostnexora.vpn.ui.screens.logs
 
 import androidx.compose.foundation.background
@@ -55,6 +57,7 @@ import com.ghostnexora.vpn.ui.theme.TextPrimary
 import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
 import com.ghostnexora.vpn.ui.theme.SurfaceVariant
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 @Composable
 fun LogsScreen(

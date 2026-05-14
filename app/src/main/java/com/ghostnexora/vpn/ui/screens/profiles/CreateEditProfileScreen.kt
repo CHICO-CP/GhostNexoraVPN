@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.ghostnexora.vpn.ui.screens.profiles
 
 import androidx.compose.foundation.background
@@ -54,6 +56,7 @@ import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 @Composable
 fun CreateEditProfileScreen(

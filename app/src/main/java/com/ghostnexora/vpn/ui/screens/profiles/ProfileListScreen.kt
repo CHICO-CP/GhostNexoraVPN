@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.ghostnexora.vpn.ui.screens.profiles
 
 import androidx.compose.foundation.background
@@ -67,6 +69,8 @@ import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
 import com.ghostnexora.vpn.util.toReadableDate
 import com.ghostnexora.vpn.ui.theme.MonoStyle
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun ProfileListScreen(

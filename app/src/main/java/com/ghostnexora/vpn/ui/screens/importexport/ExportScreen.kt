@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.ghostnexora.vpn.ui.screens.importexport
 
 import androidx.compose.foundation.background
@@ -62,6 +64,7 @@ import com.ghostnexora.vpn.ui.theme.TextOnAccent
 import com.ghostnexora.vpn.ui.theme.TextPrimary
 import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
+import androidx.compose.material3.ExperimentalMaterial3Api
 
 @Composable
 fun ExportScreen(
