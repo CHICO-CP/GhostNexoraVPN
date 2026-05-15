@@ -107,18 +107,14 @@ class SshTunnelEngine {
             append(host)
             append(":")
             append(port)
-            append(" HTTP/1.1
-")
+            append(" HTTP/1.1\r\n")
             append("Host: ")
             append(host)
             append(":")
             append(port)
-            append("
-")
-            append("Proxy-Connection: Keep-Alive
-")
-            append("
-")
+            append("\r\n")
+            append("Proxy-Connection: Keep-Alive\r\n")
+            append("\r\n")
         }
         socket.getOutputStream().write(request.toByteArray())
         socket.getOutputStream().flush()
@@ -128,7 +124,6 @@ class SshTunnelEngine {
             throw IOException("HTTP proxy rechazó la conexión: $response")
         }
     }
-
     private fun performSocks5Handshake(socket: Socket, host: String, port: Int) {
         val out = socket.getOutputStream()
         val input = socket.getInputStream()
