@@ -104,47 +104,6 @@ GhostNexoraVPN/
 
 ---
 
-## 🚀 Compilar el proyecto
-
-### Requisitos previos
-
-- **Android Studio** Hedgehog (2023.1.1) o superior
-- **Android SDK** 35
-- **JDK** 17 o superior
-- **Gradle** 8.4+
-
-### Pasos
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/CHICO-CP/GhostNexoraVPN.git
-cd GhostNexoraVPN
-
-# 2. Abrir en Android Studio
-# File → Open → seleccionar la carpeta GhostNexoraVPN
-
-# 3. Sincronizar Gradle
-# Android Studio lo hará automáticamente al abrir
-
-# 4. Compilar APK debug
-./gradlew assembleDebug
-
-# 5. Compilar APK release (requiere keystore)
-./gradlew assembleRelease
-```
-
-### Icono de la app
-
-Antes de compilar, añade los íconos en:
-```
-app/src/main/res/mipmap-hdpi/ic_launcher.png
-app/src/main/res/mipmap-xhdpi/ic_launcher.png
-app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-```
-> Puedes usar Android Studio → File → New → Image Asset para generarlos automáticamente.
-
----
 
 ## 📋 Permisos requeridos
 
@@ -242,7 +201,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 
 <div align="center">
 
-**Ghost Nexora VPN** — Desarrollado con ❤️ por Ghost Developer
+**Ghost Nexora VPN** — Desarrollado por Ghost Developer
 
 [GitHub](https://github.com/CHICO-CP) · [Telegram](https://t.me/Gh0stDeveloper) · [Contacto](mailto:ghostnexora@gmail.com)
 
