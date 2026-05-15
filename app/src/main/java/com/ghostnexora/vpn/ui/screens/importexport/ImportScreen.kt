@@ -210,7 +210,7 @@ fun ImportScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
                             Text(profile.name.ifEmpty { "Sin nombre" }, color = TextPrimary)
                             Text(
-                                text = "${profile.host}:${profile.port} • ${profile.method}",
+                                text = "${profile.host}:${profile.port} • ${profile.connectionModeLabel}",
                                 color = TextSecondary,
                                 style = MaterialTheme.typography.bodySmall
                             )

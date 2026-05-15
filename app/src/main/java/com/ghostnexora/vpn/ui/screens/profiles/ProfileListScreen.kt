@@ -217,7 +217,7 @@ private fun ProfileItem(
                     }
                 }
                 Text(
-                    text = "${profile.host}:${profile.port} • ${profile.method.uppercase()}",
+                    text = "${profile.host}:${profile.port} • ${profile.connectionModeLabel}",
                     style = MonoStyle.copy(color = TextSecondary),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

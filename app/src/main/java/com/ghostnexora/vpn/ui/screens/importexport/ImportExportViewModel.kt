@@ -196,9 +196,9 @@ class ImportExportViewModel @Inject constructor(
                 val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
                 cursor.moveToFirst()
                 cursor.getString(nameIndex)
-            } ?: uri.lastPathSegment ?: "GhostNexoraVPN.json"
+            } ?: uri.lastPathSegment ?: "archivo.json"
         } catch (e: Exception) {
-            "GhostNexoraVPN.json"
+            "archivo.json"
         }
     }
 }

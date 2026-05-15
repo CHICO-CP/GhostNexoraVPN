@@ -262,7 +262,7 @@ private fun ActiveProfileCard(
                 )
                 if (profile != null) {
                     Text(
-                        text = "${profile.host}:${profile.port} • ${profile.method.uppercase()}",
+                        text = "${profile.host}:${profile.port} • ${profile.connectionModeLabel}",
                         style = MonoStyle.copy(color = TextSecondary)
                     )
                 } else {

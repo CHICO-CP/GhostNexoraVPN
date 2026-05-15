@@ -255,7 +255,7 @@ fun ExportScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${profile.host}:${profile.port} • ${profile.method.uppercase()}",
+                                    text = "${profile.host}:${profile.port} • ${profile.connectionModeLabel}",
                                     style = MaterialTheme.typography.labelSmall.copy(color = TextTertiary),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis

@@ -9,6 +9,7 @@ import android.provider.MediaStore
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonSyntaxException
+import com.ghostnexora.vpn.data.model.ConnectionMode
 import com.ghostnexora.vpn.data.model.ProxyConfig
 import com.ghostnexora.vpn.data.model.VpnProfile
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -152,7 +153,7 @@ class JsonManager @Inject constructor(
     fun exportToString(profiles: List<VpnProfile>): String {
         val document = VpnProfileDocument(
             appName = "Ghost Nexora VPN",
-            version = "1.0.1",
+            version = "1.0.0",
             exportedAt = SimpleDateFormat(
                 "yyyy-MM-dd'T'HH:mm:ss'Z'",
                 Locale.getDefault()
@@ -187,7 +188,7 @@ class JsonManager @Inject constructor(
 
 data class VpnProfileDocument(
     val appName: String? = "Ghost Nexora VPN",
-    val version: String? = "1.0.1",
+    val version: String? = "1.0.0",
     val exportedAt: String? = null,
     val profiles: List<VpnProfileJson>? = null
 )
@@ -200,8 +201,10 @@ data class VpnProfileJson(
     val username: String? = "",
     val password: String? = "",
     val method: String? = "ssh",
+    val connectionMode: String? = null,
     val sslEnabled: Boolean? = true,
     val sni: String? = "",
+    val payload: String? = "",
     val proxy: ProxyJson? = null,
     val tags: List<String>? = emptyList(),
     val notes: String? = "",
@@ -220,8 +223,10 @@ data class VpnProfileJson(
             username = username ?: "",
             password = password ?: "",
             method = method ?: "ssh",
-            sslEnabled = sslEnabled ?: true,
+            connectionMode = ConnectionMode.fromStored(connectionMode, method, sslEnabled).id,
+            sslEnabled = sslEnabled ?: false,
             sni = sni ?: "",
+            payload = payload ?: "",
             proxy = ProxyConfig(
                 host = proxy?.host ?: "",
                 port = proxy?.port ?: 0,
@@ -250,8 +255,10 @@ fun VpnProfile.toJson() = VpnProfileJson(
     username = username,
     password = password,
     method = method,
+    connectionMode = connectionMode ?: VpnProfile.empty().selectedMode.id,
     sslEnabled = sslEnabled,
     sni = sni,
+    payload = payload,
     proxy = ProxyJson(
         host = proxy.host,
         port = proxy.port,

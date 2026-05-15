@@ -23,6 +23,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.ghostnexora.vpn.ui.screens.about.AboutScreen
+import com.ghostnexora.vpn.ui.screens.documentation.DocumentationScreen
 import com.ghostnexora.vpn.ui.screens.dashboard.DashboardScreen
 import com.ghostnexora.vpn.ui.screens.importexport.ExportScreen
 import com.ghostnexora.vpn.ui.screens.importexport.ImportScreen
@@ -127,6 +128,11 @@ fun GhostNavHost(
         // ── Ajustes ────────────────────────────────────────────────────────
         composable(Screen.Settings.route) {
             SettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        // ── Documentación ───────────────────────────────────────────────────
+        composable(Screen.Documentation.route) {
+            DocumentationScreen()
         }
 
         // ── Acerca de ──────────────────────────────────────────────────────
