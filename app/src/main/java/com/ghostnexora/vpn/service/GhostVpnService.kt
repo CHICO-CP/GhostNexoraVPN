@@ -13,7 +13,7 @@ import com.ghostnexora.vpn.GhostNexoraApp
 import com.ghostnexora.vpn.R
 import com.ghostnexora.vpn.data.model.ConnectionMode
 import com.ghostnexora.vpn.tunnel.SshTunnelEngine
-import com.jcraft.jsch.Session
+import net.schmizz.sshj.SSHClient
 import com.ghostnexora.vpn.data.model.LogLevel
 import com.ghostnexora.vpn.data.model.VpnConnectionState
 import com.ghostnexora.vpn.data.model.VpnProfile
@@ -50,7 +50,7 @@ class GhostVpnService : VpnService() {
     private var tunnelJob: Job? = null
     private var udpChannel: DatagramChannel? = null
     private var controlSocket: Socket? = null
-    private var sshSession: Session? = null
+    private var sshSession: SSHClient? = null
     private var activeProfile: VpnProfile? = null
     private val sshEngine = SshTunnelEngine()
 
@@ -225,7 +225,7 @@ class GhostVpnService : VpnService() {
         }
     }
 
-    private suspend fun establishControlConnection(profile: VpnProfile): Session {
+    private suspend fun establishControlConnection(profile: VpnProfile): SSHClient {
         val mode = profile.selectedMode
         val endpointHost = profile.host.trim()
         val endpointPort = profile.port
@@ -238,15 +238,15 @@ class GhostVpnService : VpnService() {
             )
         }
 
-        return sshEngine.connect(profile).also {
-            logSafe(LogLevel.DEBUG, "SSH auth OK → $endpointHost:$endpointPort", profile.id)
-            if (mode.usesTls) {
-                logSafe(LogLevel.DEBUG, "SNI aplicado: ${profile.sni.ifBlank { endpointHost }}", profile.id)
-            }
-            if (mode.requiresProxy && profile.proxy.host.isNotBlank()) {
-                logSafe(LogLevel.DEBUG, "Proxy aplicado: ${profile.proxy.host}:${profile.proxy.port}", profile.id)
-            }
+        val client = sshEngine.connect(profile)
+        logSafe(LogLevel.DEBUG, "SSH auth OK → $endpointHost:$endpointPort", profile.id)
+        if (mode.usesTls) {
+            logSafe(LogLevel.DEBUG, "SNI aplicado: ${profile.sni.ifBlank { endpointHost }}", profile.id)
         }
+        if (mode.requiresProxy && profile.proxy.host.isNotBlank()) {
+            logSafe(LogLevel.DEBUG, "Proxy aplicado: ${profile.proxy.host}:${profile.proxy.port}", profile.id)
+        }
+        return client
     }
 
     private fun connectDirect(host: String, port: Int): Socket {
