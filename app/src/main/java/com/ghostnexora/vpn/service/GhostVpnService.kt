@@ -12,6 +12,8 @@ import androidx.core.app.NotificationCompat
 import com.ghostnexora.vpn.GhostNexoraApp
 import com.ghostnexora.vpn.R
 import com.ghostnexora.vpn.data.model.ConnectionMode
+import com.ghostnexora.vpn.tunnel.SshTunnelEngine
+import com.jcraft.jsch.Session
 import com.ghostnexora.vpn.data.model.LogLevel
 import com.ghostnexora.vpn.data.model.VpnConnectionState
 import com.ghostnexora.vpn.data.model.VpnProfile
@@ -48,7 +50,9 @@ class GhostVpnService : VpnService() {
     private var tunnelJob: Job? = null
     private var udpChannel: DatagramChannel? = null
     private var controlSocket: Socket? = null
+    private var sshSession: Session? = null
     private var activeProfile: VpnProfile? = null
+    private val sshEngine = SshTunnelEngine()
 
     private val binder = GhostVpnBinder()
 
@@ -146,21 +150,9 @@ class GhostVpnService : VpnService() {
                 return
             }
 
-            val control = establishControlConnection(profile)
-            controlSocket = control
-
-            connectTunnel(profile)
-
-            val tun = buildTunInterface(profile)
-                ?: run {
-                    updateState(VpnConnectionState.Error("No se pudo crear la interfaz TUN"))
-                    logSafe(LogLevel.ERROR, "Fallo al crear TUN", profile.id)
-                    runCatching { controlSocket?.close() }
-                    controlSocket = null
-                    return
-                }
-
-            tunInterface = tun
+            val session = establishControlConnection(profile)
+            sshSession = session
+            controlSocket = null
             repository.markLastUsed(profile.id)
 
             val connectedState = VpnConnectionState.Connected(
@@ -170,10 +162,13 @@ class GhostVpnService : VpnService() {
             )
             updateState(connectedState)
             updateNotification(connectedState)
-            logSafe(LogLevel.SUCCESS, "VPN conectada: ${profile.host}:${profile.port}", profile.id)
+            logSafe(LogLevel.SUCCESS, "Sesión SSH establecida: ${profile.host}:${profile.port}", profile.id)
+            logSafe(LogLevel.INFO, "Modo activo: ${profile.connectionModeLabel}", profile.id)
+            if (profile.selectedMode.requiresPayload) {
+                logSafe(LogLevel.WARNING, "El modo con payload aún queda pendiente de un core de datos", profile.id)
+            }
 
             maybeStartFloatingWindow()
-            startPacketForwarding(tun)
 
         } catch (e: Exception) {
             val msg = e.message ?: "Error desconocido al conectar"
@@ -196,6 +191,8 @@ class GhostVpnService : VpnService() {
 
             runCatching { controlSocket?.close() }
             controlSocket = null
+            runCatching { sshEngine.disconnect(sshSession) }
+            sshSession = null
 
             tunInterface?.close()
             tunInterface = null
@@ -228,29 +225,27 @@ class GhostVpnService : VpnService() {
         }
     }
 
-    private suspend fun establishControlConnection(profile: VpnProfile): Socket {
+    private suspend fun establishControlConnection(profile: VpnProfile): Session {
         val mode = profile.selectedMode
         val endpointHost = profile.host.trim()
         val endpointPort = profile.port
 
-        val baseSocket = if (mode.requiresProxy && profile.proxy.host.isNotBlank()) {
-            connectThroughProxy(profile, endpointHost, endpointPort)
-        } else {
-            connectDirect(endpointHost, endpointPort)
-        }
-
         if (mode.requiresPayload && profile.payload.isNotBlank()) {
-            runCatching {
-                baseSocket.getOutputStream().write(profile.payload.toByteArray())
-                baseSocket.getOutputStream().flush()
-                logSafe(LogLevel.DEBUG, "Payload enviado (${profile.payload.length} bytes)", profile.id)
-            }
+            logSafe(
+                LogLevel.WARNING,
+                "El modo ${mode.label} requiere un core de payload aparte; por ahora se usará solo la sesión SSH/TLS",
+                profile.id
+            )
         }
 
-        return if (mode.usesTls) {
-            wrapWithTls(baseSocket, profile.sni.ifBlank { endpointHost }, endpointPort)
-        } else {
-            baseSocket
+        return sshEngine.connect(profile).also {
+            logSafe(LogLevel.DEBUG, "SSH auth OK → $endpointHost:$endpointPort", profile.id)
+            if (mode.usesTls) {
+                logSafe(LogLevel.DEBUG, "SNI aplicado: ${profile.sni.ifBlank { endpointHost }}", profile.id)
+            }
+            if (mode.requiresProxy && profile.proxy.host.isNotBlank()) {
+                logSafe(LogLevel.DEBUG, "Proxy aplicado: ${profile.proxy.host}:${profile.proxy.port}", profile.id)
+            }
         }
     }
 
