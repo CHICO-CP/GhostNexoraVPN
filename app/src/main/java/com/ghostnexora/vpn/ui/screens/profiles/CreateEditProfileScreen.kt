@@ -160,14 +160,14 @@ fun CreateEditProfileScreen(
                     OutlinedTextField(
                         value = state.username,
                         onValueChange = viewModel::onUsernameChange,
-                        label = { Text("Usuario (opcional)") },
+                        label = { Text("Usuario") },
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     OutlinedTextField(
                         value = state.password,
                         onValueChange = viewModel::onPasswordChange,
-                        label = { Text("Contraseña (opcional)") },
+                        label = { Text("Contraseña") },
                         modifier = Modifier.fillMaxWidth(),
                         visualTransformation = if (state.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {

@@ -2,6 +2,8 @@
 
 package com.ghostnexora.vpn.ui.screens.importexport
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,12 +20,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.FolderOff
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -48,7 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ghostnexora.vpn.data.model.VpnProfile
 import com.ghostnexora.vpn.ui.theme.BackgroundDark
 import com.ghostnexora.vpn.ui.theme.BorderNormal
 import com.ghostnexora.vpn.ui.theme.BorderSubtle
@@ -64,7 +67,6 @@ import com.ghostnexora.vpn.ui.theme.TextOnAccent
 import com.ghostnexora.vpn.ui.theme.TextPrimary
 import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
-import androidx.compose.material3.ExperimentalMaterial3Api
 
 @Composable
 fun ExportScreen(
@@ -74,6 +76,14 @@ fun ExportScreen(
     val state by viewModel.exportState.collectAsState()
     val profiles by viewModel.allProfiles.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val manualSaveLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            viewModel.exportToUri(uri, profiles)
+        }
+    }
 
     LaunchedEffect(state.exportSuccess) {
         if (state.exportSuccess) {
@@ -210,12 +220,12 @@ fun ExportScreen(
                             Box(
                                 modifier = Modifier
                                     .size(22.dp)
-                                    .clip(MaterialTheme.shapes.extraSmall)
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(if (isSelected) NeonCyan else SurfaceElevated)
                                     .border(
                                         width = Dimens.BorderNormal,
                                         color = if (isSelected) NeonCyan else BorderNormal,
-                                        shape = MaterialTheme.shapes.extraSmall
+                                        shape = RoundedCornerShape(6.dp)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -261,9 +271,9 @@ fun ExportScreen(
 
                 item {
                     val label = when {
-                        state.selectedIds.isEmpty() -> "Exportar todos (${profiles.size})"
-                        state.selectedIds.size == 1 -> "Exportar 1 perfil"
-                        else -> "Exportar ${state.selectedIds.size} perfiles"
+                        state.selectedIds.isEmpty() -> "Guardar todos en Descargas"
+                        state.selectedIds.size == 1 -> "Guardar 1 perfil en Descargas"
+                        else -> "Guardar ${state.selectedIds.size} perfiles en Descargas"
                     }
 
                     Column(verticalArrangement = Arrangement.spacedBy(Dimens.SpaceSM)) {
@@ -280,13 +290,25 @@ fun ExportScreen(
                             contentColor = TextOnAccent
                         )
 
+                        GhostButton(
+                            text = "Elegir ubicación manual",
+                            onClick = {
+                                val suggestedName = "ghost_nexora_export_${System.currentTimeMillis()}.json"
+                                manualSaveLauncher.launch(suggestedName)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isLoading && profiles.isNotEmpty(),
+                            containerColor = NeonCyan,
+                            contentColor = TextOnAccent
+                        )
+
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)
                         ) {
                             Icon(Icons.Filled.Info, null, tint = TextTertiary, modifier = Modifier.size(Dimens.IconXS))
                             Text(
-                                "El archivo JSON se compartirá mediante el sistema de Android",
+                                "Por defecto se guardará en Descargas/GhostNexoraVPN",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = TextTertiary
                             )

@@ -22,11 +22,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +42,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,16 +64,13 @@ import com.ghostnexora.vpn.ui.theme.Dimens
 import com.ghostnexora.vpn.ui.theme.GhostButton
 import com.ghostnexora.vpn.ui.theme.GhostCard
 import com.ghostnexora.vpn.ui.theme.NeonCyan
-import com.ghostnexora.vpn.ui.theme.ProfileTagChip
 import com.ghostnexora.vpn.ui.theme.SurfaceVariant
 import com.ghostnexora.vpn.ui.theme.TextOnAccent
 import com.ghostnexora.vpn.ui.theme.TextPrimary
 import com.ghostnexora.vpn.ui.theme.TextSecondary
 import com.ghostnexora.vpn.ui.theme.TextTertiary
-import com.ghostnexora.vpn.util.toReadableDate
 import com.ghostnexora.vpn.ui.theme.MonoStyle
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.collectAsState
+import com.ghostnexora.vpn.util.toReadableDate
 
 @Composable
 fun ProfileListScreen(
@@ -81,6 +81,7 @@ fun ProfileListScreen(
 ) {
     val profiles by viewModel.profiles.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val activeProfileId by viewModel.activeProfileId.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var profileToDelete by remember { mutableStateOf<VpnProfile?>(null) }
 
@@ -151,6 +152,8 @@ fun ProfileListScreen(
                 items(items = profiles, key = { it.id }) { profile ->
                     ProfileItem(
                         profile = profile,
+                        isActive = profile.id == activeProfileId,
+                        onSelect = { viewModel.selectActiveProfile(profile.id) },
                         onEdit = { onEditProfile(profile.id) },
                         onDelete = { viewModel.requestDelete(profile) }
                     )
@@ -164,13 +167,17 @@ fun ProfileListScreen(
 @Composable
 private fun ProfileItem(
     profile: VpnProfile,
+    isActive: Boolean,
+    onSelect: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     GhostCard(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = SurfaceVariant,
-        borderColor = BorderSubtle,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onSelect),
+        backgroundColor = if (isActive) NeonCyan.copy(alpha = 0.08f) else SurfaceVariant,
+        borderColor = if (isActive) NeonCyan else BorderSubtle,
         contentPadding = PaddingValues(Dimens.SpaceMD)
     ) {
         Row(
@@ -185,17 +192,30 @@ private fun ProfileItem(
                     .background(NeonCyan.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Filled.VpnKey, null, tint = NeonCyan, modifier = Modifier.size(28.dp))
+                if (isActive) {
+                    Icon(Icons.Filled.CheckCircle, null, tint = NeonCyan, modifier = Modifier.size(28.dp))
+                } else {
+                    Icon(Icons.Filled.VpnKey, null, tint = NeonCyan, modifier = Modifier.size(28.dp))
+                }
             }
 
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = profile.name.ifEmpty { "Perfil sin nombre" },
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = profile.name.ifEmpty { "Perfil sin nombre" },
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (isActive) {
+                        Text(
+                            text = "ACTIVO",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = NeonCyan
+                        )
+                    }
+                }
                 Text(
                     text = "${profile.host}:${profile.port} • ${profile.method.uppercase()}",
                     style = MonoStyle.copy(color = TextSecondary),
@@ -204,7 +224,13 @@ private fun ProfileItem(
                 )
                 if (profile.tags.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(Dimens.SpaceXS)) {
-                        profile.tags.take(3).forEach { tag -> ProfileTagChip(tag) }
+                        profile.tags.take(3).forEach { tag ->
+                            Text(
+                                text = tag,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextTertiary
+                            )
+                        }
                     }
                 }
                 Text(

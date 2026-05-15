@@ -30,7 +30,7 @@ import com.ghostnexora.vpn.ui.theme.*
 private const val GITHUB_URL   = "https://github.com/CHICO-CP"
 private const val TELEGRAM_URL = "https://t.me/Gh0stDeveloper"
 private const val EMAIL        = "ghostnexora@gmail.com"
-private const val APP_VERSION  = "1.0.0"
+private const val APP_VERSION  = "1.0.1"
 
 @Composable
 fun AboutScreen() {
@@ -578,7 +578,7 @@ private fun VersionFooter() {
             )
         )
         Text(
-            text  = "Desarrollado con ❤️ por Ghost Developer",
+            text  = "Desarrollado por Ghost Developer",
             style = MaterialTheme.typography.bodySmall,
             color = TextTertiary,
             textAlign = TextAlign.Center
